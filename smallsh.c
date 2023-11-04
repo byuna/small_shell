@@ -19,10 +19,10 @@ char * expand(char const *word);
 int main(int argc, char *argv[])
 {
   FILE *input = stdin;
-  char *input_fn = "(stdin)";
+  char *input_fn = "(stdin)";             // fn means file name.
   if (argc == 2) {
-    input_fn = argv[1];
-    input = fopen(input_fn, "re");
+    input_fn = argv[1];                   // if we read from a file, set it to file name.
+    input = fopen(input_fn, "re");        // r is read. e is O_CLOEXEC flag
     if (!input) err(1, "%s", input_fn);
   } else if (argc > 2) {
     errx(1, "too many arguments");
@@ -30,15 +30,16 @@ int main(int argc, char *argv[])
 
   char *line = NULL;
   size_t n = 0;
+
   for (;;) {
-//prompt:;
+  prompt:;                                // Can use goto to jump back to here.
     /* TODO: Manage background processes */
 
-    /* TODO: prompt */
-    if (input == stdin) {
-
+    /* TODO: prompt */      // The prompt in smallsh assignment page.
+    if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
+      printf("$");
     }
-    ssize_t line_len = getline(&line, &n, input);
+    ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
     if (line_len < 0) err(1, "%s", input_fn);
     
     size_t nwords = wordsplit(line);
