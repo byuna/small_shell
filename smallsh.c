@@ -37,12 +37,27 @@ int main(int argc, char *argv[])
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-      printf("$");
+      fprintf(stderr, "$");
     }
+
+    //  Reads an line from stream and sets pointer line to it.
+    //  %n is the size.
+    //  reads from input.
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
     if (line_len < 0) err(1, "%s", input_fn);
-    
+   
+    // number of words. wordsplit puts line into individual words into words array. 
     size_t nwords = wordsplit(line);
+    
+    if(strcmp(words[0], "exit") == 0) {
+      exit(0);
+    }
+
+    if(strcmp(words[0], "cd") == 0) {
+      chdir(words[1]);
+    }
+    
+    /* Eventually comment out the below 6 lines */
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -50,6 +65,8 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
+    /* COMMENT OUT TO HERE! */
+
   }
 }
 
@@ -63,8 +80,8 @@ char *words[MAX_WORDS] = {0};
  * with pointers to the words, each as an allocated string.
  */
 size_t wordsplit(char const *line) {
-  size_t wlen = 0;
-  size_t wind = 0;
+  size_t wlen = 0;      // word length
+  size_t wind = 0;      // word index
 
   char const *c = line;
   for (;*c && isspace(*c); ++c); /* discard leading space */
@@ -102,6 +119,8 @@ param_scan(char const *word, char **start, char **end)
   char ret = 0;
   *start = NULL;
   *end = NULL;
+  // searches for the first instance of a character in a string.
+  // returns a pointer to first occurnce of char or null if char not found.
   char *s = strchr(word, '$');
   if (s) {
     char *c = strchr("$!?", s[1]);
