@@ -54,9 +54,22 @@ int main(int argc, char *argv[])
     }
 
     if(strcmp(words[0], "cd") == 0) {
-      chdir(words[1]);
+      int success = chdir(words[1]);
+
+      if(success == -1) {
+        perror("Unable to find diretory");
+      }
     }
-    
+   
+    if(strcmp(words[0], "pwd") == 0) {
+      pid_t spawnPid = -5;                   // garbage value
+      
+      spawnPid = fork();
+      if (spawnPid == 0) {
+        execlp("pwd", words[0], NULL);
+      }
+    }
+
     /* Eventually comment out the below 6 lines */
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
@@ -120,7 +133,7 @@ param_scan(char const *word, char **start, char **end)
   *start = NULL;
   *end = NULL;
   // searches for the first instance of a character in a string.
-  // returns a pointer to first occurnce of char or null if char not found.
+  // returns a pointer to first occurence of char or null if char not found.
   char *s = strchr(word, '$');
   if (s) {
     char *c = strchr("$!?", s[1]);
