@@ -71,6 +71,7 @@ int main(int argc, char *argv[])
     }
 
     /* Eventually comment out the below 6 lines */
+    /*
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -78,6 +79,7 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
+    */
     /* COMMENT OUT TO HERE! */
 
   }
