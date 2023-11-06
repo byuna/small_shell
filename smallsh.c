@@ -33,23 +33,21 @@ int main(int argc, char *argv[])
   size_t n = 0;
 
   for (;;) {
-  prompt:;                                // Can use goto to jump back to here.
+  // Can use goto to jump back to here.
+  prompt:;                                
     /* TODO: Manage background processes */
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-      fprintf(stderr, "$");
+    //  fprintf(stderr, "$");
     }
 
-    //  Reads an line from stream and sets pointer line to it.
-    //  %n is the size.
-    //  reads from input.
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
     if (line_len < 0) err(1, "%s", input_fn);
    
     // number of words. wordsplit puts line into individual words into words array. 
     size_t nwords = wordsplit(line);
-    
+
     if(strcmp(words[0], "exit") == 0) {
       exit(0);
     }
@@ -72,18 +70,19 @@ int main(int argc, char *argv[])
     
     switch(spawnPid) {
       case -1:
-        perror("fork() failed");
+        // perror("fork() failed");
         exit(1);
         break;
       case 0:
-        execvp(words[0], words);        // For some reason words isn't being cleared out.
-        perror("Error");
+        execvp(words[0], words);        // For some reason words isn't being cleared out. find way to print length of words
+        // perror("execvp() error");
         exit(1);
         break;
       default:
         waitpid(spawnPid, &childExitMethod, 0);
+        break;
     }
-
+/*
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -91,6 +90,7 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
+*/
   }
 }
 
