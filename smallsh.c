@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
+      fprintf(stderr, "$");
     }
 
     //  Reads an line from stream and sets pointer line to it.
@@ -72,16 +73,17 @@ int main(int argc, char *argv[])
     switch(spawnPid) {
       case -1:
         perror("fork() failed");
+        exit(1);
         break;
       case 0:
-        execvp(words[0], &words[0]);  // What happens is the command is invalid?
+        execvp(words[0], words);        // For some reason words isn't being cleared out.
         perror("Error");
+        exit(1);
         break;
       default:
         waitpid(spawnPid, &childExitMethod, 0);
     }
 
-/*
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -89,7 +91,6 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
-*/
   }
 }
 
