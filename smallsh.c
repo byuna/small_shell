@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-      fprintf(stderr, "$");
     }
 
     //  Reads an line from stream and sets pointer line to it.
@@ -58,10 +57,11 @@ int main(int argc, char *argv[])
       int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
    
       if(chdirStatus == -1) {
-        perror("Directory not found");
+        perror("Error");
       } else {
         chdir(words[1]);
       }
+      goto prompt;
     }
 
     pid_t spawnPid = -5;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         break;
       case 0:
         execvp(words[0], &words[0]);  // What happens is the command is invalid?
-        return errno;                                  
+        perror("Error");
         break;
       default:
         waitpid(spawnPid, &childExitMethod, 0);
