@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <string.h>
+#include <sys/wait.h>
 
 #ifndef MAX_WORDS
 #define MAX_WORDS 512
@@ -54,24 +55,28 @@ int main(int argc, char *argv[])
     }
 
     if(strcmp(words[0], "cd") == 0) {
-      int success = chdir(words[1]);
-
-      if(success == -1) {
-        perror("Unable to find diretory");
-      }
-    }
+      int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
    
-    if(strcmp(words[0], "pwd") == 0) {
-      pid_t spawnPid = -5;                   // garbage value
-      
-      spawnPid = fork();
-      if (spawnPid == 0) {
-        execlp("pwd", words[0], NULL);
+      if(chdirStatus == -1) {
+        perror("Directory not found");
+      } else {
+        chdir(words[1]);
       }
     }
 
-    /* Eventually comment out the below 6 lines */
-    /*
+    pid_t spawnPid = -5;
+    int childExitMethod;
+
+    spawnPid = fork();
+    
+    if(spawnPid == -1) {
+      perror("fork() failed");
+    } else if(spawnPid == 0) {
+      execvp(words[0], &words[0]);
+    } else {
+      waitpid(spawnPid, &childExitMethod, 0);
+    }
+/*
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -79,9 +84,7 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
-    */
-    /* COMMENT OUT TO HERE! */
-
+*/
   }
 }
 
@@ -133,7 +136,7 @@ param_scan(char const *word, char **start, char **end)
   
   char ret = 0;
   *start = NULL;
-  *end = NULL;
+  // returns a pointer to first occurnce of char or null if char not found.
   // searches for the first instance of a character in a string.
   // returns a pointer to first occurence of char or null if char not found.
   char *s = strchr(word, '$');
