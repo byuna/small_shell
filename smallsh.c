@@ -69,13 +69,18 @@ int main(int argc, char *argv[])
 
     spawnPid = fork();
     
-    if(spawnPid == -1) {
-      perror("fork() failed");
-    } else if(spawnPid == 0) {
-      execvp(words[0], &words[0]);
-    } else {
-      waitpid(spawnPid, &childExitMethod, 0);
+    switch(spawnPid) {
+      case -1:
+        perror("fork() failed");
+        break;
+      case 0:
+        execvp(words[0], &words[0]);  // What happens is the command is invalid?
+        return errno;                                  
+        break;
+      default:
+        waitpid(spawnPid, &childExitMethod, 0);
     }
+
 /*
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
