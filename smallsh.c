@@ -45,9 +45,10 @@ int main(int argc, char *argv[])
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
     if (line_len < 0) err(1, "%s", input_fn);
    
-    // number of words. wordsplit puts line into individual words into words array. 
+    // number of words. wordsplit puts line into individual words into words array.
     size_t nwords = wordsplit(line);
-
+    
+    
     if(strcmp(words[0], "exit") == 0) {
       exit(0);
     }
@@ -70,12 +71,12 @@ int main(int argc, char *argv[])
     
     switch(spawnPid) {
       case -1:
-        // perror("fork() failed");
+        perror("fork() failed");
         exit(1);
         break;
       case 0:
-        execvp(words[0], words);        // For some reason words isn't being cleared out. find way to print length of words
-        // perror("execvp() error");
+        execvp(words[0], words);
+        perror("execvp() error");
         exit(1);
         break;
       default:
@@ -91,11 +92,15 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
 */
+    // reset words array to NULL so it doesn't contain garbage values.
+    // turn this into a helper function if i have time.
+    for (int i = 0; i < MAX_WORDS; i++) {
+      words[i] = 0;
+    }
   }
 }
 
 char *words[MAX_WORDS] = {0};
-
 
 /* Splits a string into words delimited by whitespace. Recognizes
  * comments as '#' at the beginning of a word, and backslash escapes.
@@ -120,7 +125,7 @@ size_t wordsplit(char const *line) {
       if (!tmp) err(1, "realloc");
       words[wind] = tmp;
       words[wind][wlen++] = *c; 
-      words[wind][wlen] = '\0';
+      words[wind][wlen] = '\0';       // adds null termination to string, not the array
     }
     ++wind;
     wlen = 0;
