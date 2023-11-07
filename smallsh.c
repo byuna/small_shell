@@ -39,16 +39,21 @@ int main(int argc, char *argv[])
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-    //  fprintf(stderr, "$");
+      fprintf(stderr, "$");
     }
 
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
     if (line_len < 0) err(1, "%s", input_fn);
    
     // number of words. wordsplit puts line into individual words into words array.
-    size_t nwords = wordsplit(line);
+    //size_t nwords = wordsplit(line);
     
+    wordsplit(line);
     
+    if(words[0] == 0) {
+      goto prompt;
+    }
+
     if(strcmp(words[0], "exit") == 0) {
       exit(0);
     }
