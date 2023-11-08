@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
       fprintf(stderr, "$");
     }
 
+    clearerr(input);
+    errno = 0;
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
+    
     if (line_len < 0) err(1, "%s", input_fn);
    
     // number of words. wordsplit puts line into individual words into words array.
