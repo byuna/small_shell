@@ -18,7 +18,7 @@ char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
 
-int foreground_status = -5;
+int foreground_status = 0;
 pid_t background_pid = -5;
 bool bg_process;
 
@@ -72,9 +72,16 @@ int main(int argc, char *argv[])
     if(nwords > 1 && (strcmp(words[nwords-1], "&")) == 0) {
       bg_process = true;
     }
+
+
+    // need to fix this so that i can call a child process to exit and record the status.
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
-      exit(0);
+      if(nwords == 1) {
+        exit(0);
+      } else if(nwords > 1) {
+        exit(atoi(words[1]));
+      }
     }
 
     // builtin command for cd.
