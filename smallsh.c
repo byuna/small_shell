@@ -41,21 +41,20 @@ int main(int argc, char *argv[])
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr, "$");
     }
-
+    
+    // reset errors and clear errno.
     clearerr(input);
     errno = 0;
 
-    ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
+    ssize_t line_len = getline(&line, &n, input);
+    // get line will return -1 for EOF and for errors, so we check for EOF to exit before it errors out.
     if (feof(input) != 0) {
       exit(0);
+    } else if (line_len < 0) {
+      err(1, "%s", input_fn);
     }
-
-    if (line_len < 0) err(1, "%s", input_fn);
-   
     // number of words. wordsplit puts line into individual words into words array.
-    //size_t nwords = wordsplit(line);
-    
-    wordsplit(line);
+    size_t nwords = wordsplit(line);
     
     if(words[0] == 0) {
       goto prompt;
@@ -95,7 +94,7 @@ int main(int argc, char *argv[])
         waitpid(spawnPid, &childExitMethod, 0);
         break;
     }
-/*
+
     for (size_t i = 0; i < nwords; ++i) {
       fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
@@ -103,7 +102,7 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
-*/
+
     // reset words array to NULL so it doesn't contain garbage values.
     // turn this into a helper function if i have time.
     for (int i = 0; i < MAX_WORDS; i++) {
@@ -228,10 +227,18 @@ expand(char const *word)
   build_str(NULL, NULL);
   build_str(pos, start);
   while (c) {
-    if (c == '!') build_str("<BGPID>", NULL);
-    else if (c == '$') build_str("<PID>", NULL);
-    else if (c == '?') build_str("<STATUS>", NULL);
-    else if (c == '{') {
+    if (c == '!') {
+      build_str("<BGPID>", NULL);
+    } else if (c == '$') {
+      // work cited.
+      // https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
+      int pid = getpid();
+      char mypid[6];
+      sprintf(mypid, "%d", pid);
+      build_str(mypid, NULL);
+    } else if (c == '?') {
+      build_str("<STATUS>", NULL);
+    } else if (c == '{') {
       build_str("<Parameter: ", NULL);
       build_str(start + 2, end - 1);
       build_str(">", NULL);
