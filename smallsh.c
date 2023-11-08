@@ -18,9 +18,9 @@ char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
 
-int fore_stat;
-int back_stat;
-bool bg_process = false;
+int foreground_status = -5;
+pid_t background_pid = -5;
+bool bg_process;
 
 int main(int argc, char *argv[])
 {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
-
+    bg_process = false;
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr, "$");
@@ -68,7 +68,8 @@ int main(int argc, char *argv[])
     }
     
     // check to see if background process.
-    if(nwords > 2 && (strcmp(words[nwords-2], "&")) == 0) {
+    // DON'T CALL WAIT WHEN RUNNING EXCEP VP IN BACKGROUND. WNOHANG
+    if(nwords > 1 && (strcmp(words[nwords-1], "&")) == 0) {
       bg_process = true;
     }
     // builtin command for exit.
@@ -90,16 +91,15 @@ int main(int argc, char *argv[])
     
     // Expand $$, $?, $! in words.
     for (size_t i = 0; i < nwords; ++i) {
-     // fprintf(stderr, "Word %zu: %s\n", i, words[i]);
+      fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
       free(words[i]);
       words[i] = exp_word;
-      //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
+      fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
 
     pid_t spawnPid = -5;
-    int childExitMethod;
-    int stat;
+    int status;
 
     spawnPid = fork();
     
@@ -108,17 +108,24 @@ int main(int argc, char *argv[])
         perror("fork() failed");
         exit(1);
         break;
-      case 0:
+      case 0:   // Child fork()
+        if (bg_process) {
+          words[nwords - 1] = 0;
+        }
         execvp(words[0], words);
         perror("execvp() error");
         exit(1);
         break;
-      default:
-        stat = waitpid(spawnPid, &childExitMethod, 0);
-        if(!bg_process) {
-          fore_stat = childExitMethod;
+      default:  // Parent process. 
+        // If ampersand is last character before NULL,
+        // set background process to true,
+        // run process with WNOHANG
+        // set ampersand to 0
+        if(bg_process) {
+          background_pid = spawnPid; 
         } else {
-          back_stat = stat; 
+          waitpid(spawnPid, &status, 0);
+          foreground_status = status; 
         }
         break;
     }
@@ -248,21 +255,19 @@ expand(char const *word)
   build_str(pos, start);
   while (c) {
     if (c == '!') {
-      int pid = getpid();
       char mypid[6];
-      sprintf(mypid, "%d", pid);
+      sprintf(mypid, "%d", background_pid);
       build_str(mypid, NULL);
     } else if (c == '$') {
-      // work cited.
-      // https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
       int pid = getpid();
       char mypid[6];
       sprintf(mypid, "%d", pid);
       build_str(mypid, NULL);
+      // status of last run process.
     } else if (c == '?') {
       char stat[6];
-      sprintf(stat, "%d", fore_stat);
-      build_str(stat, NULL);    // Returning foreground PID, not exit status
+      sprintf(stat, "%d", foreground_status);
+      build_str(stat, NULL);
     } else if (c == '{') {
       build_str("<Parameter: ", NULL);
       build_str(start + 2, end - 1);
@@ -274,3 +279,5 @@ expand(char const *word)
   }
   return build_str(start, NULL);
 }
+
+// work cited: https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
