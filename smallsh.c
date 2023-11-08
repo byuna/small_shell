@@ -80,7 +80,9 @@ int main(int argc, char *argv[])
       if(nwords == 1) {
         exit(0);
       } else if(nwords > 1) {
-        exit(atoi(words[1]));
+        int status_as_int = atoi(words[1]);
+        foreground_status = status_as_int;
+        exit(foreground_status);
       }
     }
 
