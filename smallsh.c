@@ -20,7 +20,7 @@ char * expand(char const *word);
 
 int fore_stat;
 int back_stat;
-bool b_process = false;
+bool bg_process = false;
 
 int main(int argc, char *argv[])
 {
@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
         exit(1);
         break;
       default:
-        fore_stat = waitpid(spawnPid, &childExitMethod, 0);
+        waitpid(spawnPid, &childExitMethod, 0);
+        fore_stat = childExitMethod;
         break;
     }
 
@@ -249,7 +250,7 @@ expand(char const *word)
     } else if (c == '?') {
       char stat[6];
       sprintf(stat, "%d", fore_stat);
-      build_str(stat, NULL);
+      build_str(stat, NULL);    // Returning foreground PID, not exit status
     } else if (c == '{') {
       build_str("<Parameter: ", NULL);
       build_str(start + 2, end - 1);
