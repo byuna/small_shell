@@ -67,6 +67,10 @@ int main(int argc, char *argv[])
       goto prompt;
     }
     
+    // check to see if background process.
+    if(nwords > 2 && (strcmp(words[nwords-2], "&")) == 0) {
+      bg_process = true;
+    }
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
       exit(0);
@@ -95,6 +99,7 @@ int main(int argc, char *argv[])
 
     pid_t spawnPid = -5;
     int childExitMethod;
+    int stat;
 
     spawnPid = fork();
     
@@ -109,8 +114,12 @@ int main(int argc, char *argv[])
         exit(1);
         break;
       default:
-        waitpid(spawnPid, &childExitMethod, 0);
-        fore_stat = childExitMethod;
+        stat = waitpid(spawnPid, &childExitMethod, 0);
+        if(!bg_process) {
+          fore_stat = childExitMethod;
+        } else {
+          back_stat = stat; 
+        }
         break;
     }
 
@@ -239,7 +248,10 @@ expand(char const *word)
   build_str(pos, start);
   while (c) {
     if (c == '!') {
-      build_str("<BGPID>", NULL);
+      int pid = getpid();
+      char mypid[6];
+      sprintf(mypid, "%d", pid);
+      build_str(mypid, NULL);
     } else if (c == '$') {
       // work cited.
       // https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
