@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
         // set ampersand to 0
         if(bg_process) {
           background_pid = spawnPid; 
+          waitpid(spawnPid, &status, WNOHANG);
         } else {
           waitpid(spawnPid, &status, 0);
           foreground_status = status; 
