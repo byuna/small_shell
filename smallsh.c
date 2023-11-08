@@ -45,10 +45,11 @@ int main(int argc, char *argv[])
     clearerr(input);
     errno = 0;
 
-    if (feof(input) != 0) {
-      break;
-    }
     ssize_t line_len = getline(&line, &n, input);       // Read getline man pages.
+    if (feof(input) != 0) {
+      exit(0);
+    }
+
     if (line_len < 0) err(1, "%s", input_fn);
    
     // number of words. wordsplit puts line into individual words into words array.
