@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <stdbool.h>
 
 #ifndef MAX_WORDS
 #define MAX_WORDS 512
@@ -16,6 +17,10 @@
 char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
+
+int fore_stat;
+int back_stat;
+bool b_process = false;
 
 int main(int argc, char *argv[])
 {
@@ -31,6 +36,8 @@ int main(int argc, char *argv[])
 
   char *line = NULL;
   size_t n = 0;
+
+  // For use in expansion. Set to garbage values.
 
   for (;;) {
   // Can use goto to jump back to here.
@@ -102,7 +109,7 @@ int main(int argc, char *argv[])
         exit(1);
         break;
       default:
-        waitpid(spawnPid, &childExitMethod, 0);
+        fore_stat = waitpid(spawnPid, &childExitMethod, 0);
         break;
     }
 
@@ -240,7 +247,9 @@ expand(char const *word)
       sprintf(mypid, "%d", pid);
       build_str(mypid, NULL);
     } else if (c == '?') {
-      build_str("<STATUS>", NULL);
+      char stat[6];
+      sprintf(stat, "%d", fore_stat);
+      build_str(stat, NULL);
     } else if (c == '{') {
       build_str("<Parameter: ", NULL);
       build_str(start + 2, end - 1);
