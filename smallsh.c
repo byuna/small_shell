@@ -18,8 +18,8 @@ char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
 
-int foreground_status = -4;
-pid_t background_pid = -5;
+int foreground_status = 0;
+pid_t background_pid = 0;
 bool bg_process;
 
 int main(int argc, char *argv[])
