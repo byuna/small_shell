@@ -195,37 +195,38 @@ size_t wordsplit(char const *line) {
  * token.
  */
 char
-param_scan(char const *word, char **start, char **end)
+param_scan(char const *word, char const **start, char const **end)
 {
-  static char *prev;
+  static char const *prev;
   if (!word) word = prev;
   
   char ret = 0;
-  *start = NULL;
-  // returns a pointer to first occurnce of char or null if char not found.
-  // searches for the first instance of a character in a string.
-  // returns a pointer to first occurence of char or null if char not found.
-  char *s = strchr(word, '$');
-  if (s) {
-    char *c = strchr("$!?", s[1]);
-    if (c) {
-      ret = *c;
+  *start = 0;
+  *end = 0;
+  for (char const *s = word; *s && !ret; ++s) {
+    s = strchr(s, '$');
+    if (!s) break;
+    switch (s[1]) {
+    case '$':
+    case '!':
+    case '?':
+      ret = s[1];
       *start = s;
       *end = s + 2;
-    }
-    else if (s[1] == '{') {
+      break;
+    case '{':;
       char *e = strchr(s + 2, '}');
       if (e) {
-        ret = '{';
+        ret = s[1];
         *start = s;
         *end = e + 1;
       }
+      break;
     }
   }
   prev = *end;
   return ret;
 }
-
 /* Simple string-builder function. Builds up a base
  * string by appending supplied strings/character ranges
  * to it.
