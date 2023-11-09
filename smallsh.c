@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         } else {
           waitpid(spawnPid, &child_status, 0);
           if (WIFSIGNALED(child_status) != 0) {
-            foreground_status = 127 + WEXITSTATUS(child_status);
+            foreground_status = 128 + WTERMSIG(child_status);
           } else {
             foreground_status = WEXITSTATUS(child_status); 
           }
