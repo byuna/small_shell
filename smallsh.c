@@ -267,7 +267,7 @@ char *
 expand(char const *word)
 {
   char const *pos = word;
-  char *start, *end;
+  char const *start, *end;
   char c = param_scan(pos, &start, &end);
   build_str(NULL, NULL);
   build_str(pos, start);
@@ -287,10 +287,14 @@ expand(char const *word)
       sprintf(stat, "%d", foreground_status);
       build_str(stat, NULL);
     } else if (c == '{') {
-      build_str(getenv(strip_string(word)), NULL);
-      // build_str("<Parameter: ", NULL);
-      // build_str(start + 2, end - 1);
-      // build_str(">", NULL);
+      size_t str_length = end - start - 3;
+      char * new_string = calloc(str_length, sizeof(char));
+      memcpy(new_string, start + 2, str_length);
+      build_str(getenv(new_string), NULL); 
+      // build_str(getenv(strip_string(word)), NULL);
+      //build_str("<Parameter: ", NULL);
+      //build_str(start + 2, end - 1);
+      //build_str(">", NULL);
     }
     pos = end;
     c = param_scan(pos, &start, &end);
@@ -307,9 +311,18 @@ strip_string(char const * word) {
   for(int i = 2; i < strlen(word) - 1; ++i) {
     new_string[i-2] = word[i];
   }
-
   // add terminating NULL.
-  new_string[strlen(word) - 1] = 0;
+  //new_string[strlen(word) - 1] = 0;
+  return new_string;
+}
+
+char *
+strip_string2(char const *start, char const *end) {
+  size_t len = end - start;
+
+  char * new_string = calloc((end - start), sizeof(char));
+  
+  memcpy(new_string, start, len);
 
   return new_string;
 }
