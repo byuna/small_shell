@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     // number of words. wordsplit puts line into individual words into words array.
     size_t nwords = wordsplit(line);
     
-    if(words[0] == 0) {
+    if(nwords == 0) {
       goto prompt;
     }
     
@@ -73,23 +73,28 @@ int main(int argc, char *argv[])
       bg_process = true;
     }
 
-
     // need to fix this so that i can call a child process to exit and record the status.
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
       if(nwords == 1) {
-        exit(0);
-      } else if(nwords > 1) {
-        int status_as_int = atoi(words[1]);
-        foreground_status = status_as_int;
         exit(foreground_status);
+      } else if(nwords > 2) {
+        perror("Too many arguments for exit()");
+      } else if (nwords == 2) {
+        // atoi returns 0 if conversation cannot take place, so check to make sure the string is not "0" as well.
+        if (atoi(words[1]) == 0 && strcmp(words[1], "0") != 0) {
+          perror("Invalid argument");
+        } else {
+          foreground_status = atoi(words[1]);
+          exit(foreground_status);
+        }
       }
+      
     }
 
     // builtin command for cd.
     if(strcmp(words[0], "cd") == 0) {
       int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
-   
       if(chdirStatus == -1) {
         perror("Error");
       } else {
@@ -135,6 +140,9 @@ int main(int argc, char *argv[])
           waitpid(spawnPid, &status, WNOHANG);
         } else {
           waitpid(spawnPid, &status, 0);
+          if (WIFSIGNALED(status) != 0) {
+            foreground_status = 127 + status;
+          }
           foreground_status = status; 
         }
         break;
@@ -265,14 +273,14 @@ expand(char const *word)
   build_str(pos, start);
   while (c) {
     if (c == '!') {
-      char mypid[6];
-      sprintf(mypid, "%d", background_pid);
-      build_str(mypid, NULL);
+      char my_pid[6];
+      sprintf(my_pid, "%d", background_pid);
+      build_str(my_pid, NULL);
     } else if (c == '$') {
       int pid = getpid();
-      char mypid[6];
-      sprintf(mypid, "%d", pid);
-      build_str(mypid, NULL);
+      char my_pid[6];
+      sprintf(my_pid, "%d", pid);
+      build_str(my_pid, NULL);
       // status of last run process.
     } else if (c == '?') {
       char stat[6];
