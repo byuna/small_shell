@@ -18,7 +18,7 @@ char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
 
-int foreground_status = 0;
+int foreground_status = -4;
 pid_t background_pid = -5;
 bool bg_process;
 
@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
           exit(foreground_status);
         }
       }
-      
     }
 
     // builtin command for cd.
@@ -115,7 +114,7 @@ int main(int argc, char *argv[])
     }
 
     pid_t spawnPid = -5;
-    int status;
+    int child_status;
 
     spawnPid = fork();
     
@@ -133,19 +132,15 @@ int main(int argc, char *argv[])
         exit(1);
         break;
       default:  // Parent process. 
-        // If ampersand is last character before NULL,
-        // set background process to true,
-        // run process with WNOHANG
-        // set ampersand to 0
         if(bg_process) {
           background_pid = spawnPid; 
-          waitpid(spawnPid, &status, WNOHANG);
+          waitpid(spawnPid, &child_status, WNOHANG);
         } else {
-          waitpid(spawnPid, &status, 0);
-          if (WIFSIGNALED(status) != 0) {
-            foreground_status = 127 + status;
+          waitpid(spawnPid, &child_status, 0);
+          if (WIFSIGNALED(child_status) != 0) {
+            foreground_status = 127 + WEXITSTATUS(child_status);
           } else {
-            foreground_status = status; 
+            foreground_status = WEXITSTATUS(child_status); 
           }
         }
         break;
