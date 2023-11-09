@@ -80,10 +80,12 @@ int main(int argc, char *argv[])
         exit(foreground_status);
       } else if(nwords > 2) {
         perror("Too many arguments for exit()");
+        goto prompt;
       } else if (nwords == 2) {
         // atoi returns 0 if conversation cannot take place, so check to make sure the string is not "0" as well.
         if (atoi(words[1]) == 0 && strcmp(words[1], "0") != 0) {
           perror("Invalid argument");
+          goto prompt;
         } else {
           foreground_status = atoi(words[1]);
           exit(foreground_status);
@@ -142,8 +144,9 @@ int main(int argc, char *argv[])
           waitpid(spawnPid, &status, 0);
           if (WIFSIGNALED(status) != 0) {
             foreground_status = 127 + status;
+          } else {
+            foreground_status = status; 
           }
-          foreground_status = status; 
         }
         break;
     }
