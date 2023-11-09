@@ -17,6 +17,7 @@
 char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
+char * strip_string(char const * word);
 
 int foreground_status = 0;
 pid_t background_pid = 0;
@@ -285,9 +286,10 @@ expand(char const *word)
       sprintf(stat, "%d", foreground_status);
       build_str(stat, NULL);
     } else if (c == '{') {
-      build_str("<Parameter: ", NULL);
-      build_str(start + 2, end - 1);
-      build_str(">", NULL);
+      build_str(getenv(strip_string(word)), NULL);
+      // build_str("<Parameter: ", NULL);
+      // build_str(start + 2, end - 1);
+      // build_str(">", NULL);
     }
     pos = end;
     c = param_scan(pos, &start, &end);
@@ -297,3 +299,16 @@ expand(char const *word)
 }
 
 // work cited: https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
+
+char *
+strip_string(char const * word) {
+  char *new_string = calloc(strlen(word) - 2, sizeof(char));
+  for(int i = 2; i < strlen(word) - 1; ++i) {
+    new_string[i-2] = word[i];
+  }
+
+  // add terminating NULL.
+  new_string[strlen(word) - 1] = 0;
+
+  return new_string;
+}
