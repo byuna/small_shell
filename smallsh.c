@@ -19,8 +19,8 @@ size_t wordsplit(char const *line);
 char * expand(char const *word);
 char * strip_string(char const * word);
 
-int foreground_status = 0;
-pid_t background_pid = 0;
+int foreground_status = 0;    // $?
+pid_t background_pid = -4;    // $!
 bool bg_process;
 
 int main(int argc, char *argv[])
@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
     }
     
     // check to see if background process.
-    // DON'T CALL WAIT WHEN RUNNING EXCEP VP IN BACKGROUND. WNOHANG
     if(nwords > 1 && (strcmp(words[nwords-1], "&")) == 0) {
       bg_process = true;
     }
@@ -96,6 +95,10 @@ int main(int argc, char *argv[])
 
     // builtin command for cd.
     if(strcmp(words[0], "cd") == 0) {
+      if (nwords == 1) {
+        chdir(getenv("HOME"));
+        goto prompt;
+      }
       int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
       if(chdirStatus == -1) {
         perror("Error");
@@ -273,8 +276,13 @@ expand(char const *word)
   build_str(pos, start);
   while (c) {
     if (c == '!') {
-      char my_pid[6];
-      sprintf(my_pid, "%d", background_pid);
+      char my_pid[6] = {0};
+      // if no existing background pid, set to ""
+      if (background_pid < -1) {
+        sprintf(my_pid, "%s", "");
+      } else {
+        sprintf(my_pid, "%d", background_pid);
+      }
       build_str(my_pid, NULL);
     } else if (c == '$') {
       int pid = getpid();
@@ -290,8 +298,7 @@ expand(char const *word)
       size_t str_length = end - start - 3;
       char * new_string = calloc(str_length, sizeof(char));
       memcpy(new_string, start + 2, str_length);
-      build_str(getenv(new_string), NULL); 
-      // build_str(getenv(strip_string(word)), NULL);
+      build_str(new_string, NULL); 
       //build_str("<Parameter: ", NULL);
       //build_str(start + 2, end - 1);
       //build_str(">", NULL);
@@ -304,25 +311,3 @@ expand(char const *word)
 }
 
 // work cited: https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
-
-char *
-strip_string(char const * word) {
-  char *new_string = calloc(strlen(word) - 2, sizeof(char));
-  for(int i = 2; i < strlen(word) - 1; ++i) {
-    new_string[i-2] = word[i];
-  }
-  // add terminating NULL.
-  //new_string[strlen(word) - 1] = 0;
-  return new_string;
-}
-
-char *
-strip_string2(char const *start, char const *end) {
-  size_t len = end - start;
-
-  char * new_string = calloc((end - start), sizeof(char));
-  
-  memcpy(new_string, start, len);
-
-  return new_string;
-}
