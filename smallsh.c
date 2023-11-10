@@ -298,7 +298,7 @@ expand(char const *word)
       size_t str_length = end - start - 3;
       char * new_string = calloc(str_length, sizeof(char));
       memcpy(new_string, start + 2, str_length);
-      build_str(new_string, NULL); 
+      build_str(getenv(new_string), NULL); 
       //build_str("<Parameter: ", NULL);
       //build_str(start + 2, end - 1);
       //build_str(">", NULL);
