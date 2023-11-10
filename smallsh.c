@@ -49,7 +49,11 @@ int main(int argc, char *argv[])
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr, "$");
     }
-    
+
+    // clearing out word so it doesn't retain garbage values.
+    for (int i = 0; i < MAX_WORDS; i++) {
+      words[i] = 0;
+    }
     // reset errors and clear errno.
     clearerr(input);
     errno = 0;
@@ -95,18 +99,35 @@ int main(int argc, char *argv[])
 
     // builtin command for cd.
     if(strcmp(words[0], "cd") == 0) {
-      if (nwords == 1) {
+      if (nwords > 2) {
+        perror("Too many arguments");
+      } else if (nwords == 1) {
         chdir(getenv("HOME"));
-        goto prompt;
-      }
-      int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
-      if(chdirStatus == -1) {
-        perror("Error");
       } else {
-        chdir(words[1]);
+        int chdir_status = chdir(words[1]);
+        if(chdir_status < 0) {
+         perror("Invalid directory"); 
+        }
       }
       goto prompt;
     }
+
+
+/*
+    if(strcmp(words[0], "cd") == 0) {
+      if (nwords == 1) {
+        chdir(getenv("HOME"));
+      } else {
+        int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
+        if(chdirStatus == -1) {
+          perror("Error");
+        } else {
+          chdir(words[1]);
+        }
+      }
+      goto prompt;
+    }
+*/
     
     // Expand $$, $?, $! in words.
     for (size_t i = 0; i < nwords; ++i) {
@@ -152,10 +173,7 @@ int main(int argc, char *argv[])
 
     // reset words array to NULL so it doesn't contain garbage values.
     // turn this into a helper function if i have time.
-    for (int i = 0; i < MAX_WORDS; i++) {
-      words[i] = 0;
-    }
-  }
+      }
 }
 
 char *words[MAX_WORDS] = {0};
