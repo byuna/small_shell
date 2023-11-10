@@ -77,7 +77,15 @@ int main(int argc, char *argv[])
       bg_process = true;
     }
 
-    // need to fix this so that i can call a child process to exit and record the status.
+    // Expand $$, $?, $! in words.
+    for (size_t i = 0; i < nwords; ++i) {
+      //fprintf(stderr, "Word %zu: %s\n", i, words[i]);
+      char *exp_word = expand(words[i]);
+      free(words[i]);
+      words[i] = exp_word;
+      //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
+    }
+
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
       if(nwords == 1) {
@@ -112,32 +120,6 @@ int main(int argc, char *argv[])
       goto prompt;
     }
 
-
-/*
-    if(strcmp(words[0], "cd") == 0) {
-      if (nwords == 1) {
-        chdir(getenv("HOME"));
-      } else {
-        int chdirStatus = chdir(words[1]);       // might have to repeat for backslashes? until all words isn't null?
-        if(chdirStatus == -1) {
-          perror("Error");
-        } else {
-          chdir(words[1]);
-        }
-      }
-      goto prompt;
-    }
-*/
-    
-    // Expand $$, $?, $! in words.
-    for (size_t i = 0; i < nwords; ++i) {
-      //fprintf(stderr, "Word %zu: %s\n", i, words[i]);
-      char *exp_word = expand(words[i]);
-      free(words[i]);
-      words[i] = exp_word;
-      //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
-    }
-
     pid_t spawnPid = -5;
     int child_status;
 
@@ -170,10 +152,7 @@ int main(int argc, char *argv[])
         }
         break;
     }
-
-    // reset words array to NULL so it doesn't contain garbage values.
-    // turn this into a helper function if i have time.
-      }
+  }
 }
 
 char *words[MAX_WORDS] = {0};
