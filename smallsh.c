@@ -22,9 +22,10 @@ char * expand(char const *word);
 char * strip_string(char const * word);
 
 int foreground_status = 0;    // $?
-int background_status;
 pid_t background_pid = -4;    // $!
 bool bg_process;
+int signal_status;
+int exit_status;
 
 int main(int argc, char *argv[])
 {
@@ -45,25 +46,13 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
-    /*
-    if(background_pid > -1 && bg_process) {
-      printf("%d\n", background_status);
-      if (WIFEXITED(background_status) != 0) {
-        fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
-      }
-        if (WIFSIGNALED(background_status) != 0) {
-        fprintf(stderr, "Child process %jd done. Signaled %d.\n", (intmax_t) background_pid, WTERMSIG(background_status));
-      }
-     bg_process = false;
-    }
-    */
-     bg_process = false;
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
     }
    
+    bg_process = false;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
       words[i] = 0;
@@ -199,7 +188,6 @@ int main(int argc, char *argv[])
         if(bg_process) {
           background_pid = spawnPid; 
           waitpid(spawnPid, &child_status, WNOHANG);
-          background_status = child_status;
         } else {
           waitpid(spawnPid, &child_status, 0);
           if (WIFSIGNALED(child_status) != 0) {
