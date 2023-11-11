@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <err.h>
 #include <errno.h>
 #include <unistd.h>
@@ -21,6 +22,7 @@ char * expand(char const *word);
 char * strip_string(char const * word);
 
 int foreground_status = 0;    // $?
+int background_status;
 pid_t background_pid = -4;    // $!
 bool bg_process;
 
@@ -43,6 +45,15 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
+    if(background_pid > -1) {
+      if (WIFEXITED(background_status)) {
+        fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
+      }
+        if (WIFSIGNALED(background_status)) {
+        fprintf(stderr, "Child process %jd done. Signaled %d.\n", (intmax_t) background_pid, WTERMSIG(background_status));
+      }
+    }
+
     bg_process = false;
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
@@ -84,19 +95,6 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
-
-/*
-    char *command = words[0];
-    size_t nargs = nwords;
-    char **args[MAX_WORDS] = {0};
-
-    // an array of pointers to strings.
-    for(int i = 0; i < nwords; ++i) {
-      if(words[i] != NULL) {
-        args[i] = &words[i + 1];
-      }
-    }
-*/
 
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
@@ -196,21 +194,13 @@ int main(int argc, char *argv[])
       default:  // Parent process. 
         if(bg_process) {
           background_pid = spawnPid; 
-          waitpid(spawnPid, &child_status, WNOHANG);
-          /*
-          if (WIFEXITED(child_status)) {
-            fprintf(stderr, "Child process %d done. Exit status %d.\n", background_pid, WEXITSTATUS(child_status));
-          }
-          if (WIFSIGNALED(child_status)) {
-            fprintf(stderr, "Child process %d done. Signaled %d.\n", background_pid, WTERMSIG(child_status));
-          }
-          */
+          waitpid(spawnPid, &background_status, WNOHANG);
         } else {
-          waitpid(spawnPid, &child_status, 0);
-          if (WIFSIGNALED(child_status) != 0) {
-            foreground_status = 128 + WTERMSIG(child_status);
+          waitpid(spawnPid, &background_status, 0);
+          if (WIFSIGNALED(background_status) != 0) {
+            foreground_status = 128 + WTERMSIG(background_status);
           } else {
-            foreground_status = WEXITSTATUS(child_status); 
+            foreground_status = WEXITSTATUS(background_status); 
           }
         }
         break;
