@@ -38,8 +38,6 @@ int main(int argc, char *argv[])
   char *line = NULL;
   size_t n = 0;
 
-  // For use in expansion. Set to garbage values.
-
   for (;;) {
   // Can use goto to jump back to here.
   prompt:;                                
@@ -49,7 +47,8 @@ int main(int argc, char *argv[])
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr, "$");
     }
-
+   
+  redirection_input:;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
       words[i] = 0;
@@ -85,6 +84,19 @@ int main(int argc, char *argv[])
       words[i] = exp_word;
       //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
+
+/*
+    char *command = words[0];
+    size_t nargs = nwords;
+    char **args[MAX_WORDS] = {0};
+
+    // an array of pointers to strings.
+    for(int i = 0; i < nwords; ++i) {
+      if(words[i] != NULL) {
+        args[i] = &words[i + 1];
+      }
+    }
+*/
 
     // builtin command for exit.
     if(strcmp(words[0], "exit") == 0) {
@@ -134,7 +146,33 @@ int main(int argc, char *argv[])
         if (bg_process) {
           words[nwords - 1] = 0;
         }
-        execvp(words[0], words);
+        // array of pointers to strings.
+        char **args[MAX_WORDS] = {0};
+        // copy words to args array, unless it's "<", ">", or ">>"
+        for(int i = 0; i < nwords; ++i) {
+          if (strcmp(words[i], "<") == 0) {
+             // change input to filename i + 1; skip to i + 2;
+            fclose(input);
+            input = fopen(words[i + 1], "r");
+            if (input == NULL) {
+              perror("Invalid file for input");
+            } else {
+              continue;
+            }
+            i++;
+          } else if (strcmp(words[i], ">") == 0) {
+            // change output to file name and remove i and i + 1; skip to i + 2.
+            close(1);
+            freopen(words[i + 1], "w+", stdout);
+            i++;
+          } else if (strcmp(words[i], ">>") == 0) {
+            i++;
+          } else {
+            args[i] = &words[i];
+          }
+        }
+
+        execvp(*args[0], *args);
         perror("execvp() error");
         exit(1);
         break;
