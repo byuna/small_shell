@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     bg_process = false;
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-      fprintf(stderr, "$");
+      fprintf(stderr, "PS1");
     }
    
     // clearing out word so it doesn't retain garbage values.
