@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
     pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
      
     if (unwaited_pid > 0) {
-      printf("Background process management loop");
       if (WIFEXITED(background_status)) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));  
       } else if (WIFSIGNALED(background_status)) {
