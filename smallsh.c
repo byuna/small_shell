@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
       if(bg_process) {
       background_pid = spawnPid; 
       } else {
-        waitpid(spawnPid, &child_status, 0);
+        waitpid(spawnPid, &child_status, WUNTRACED);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
         } else {
