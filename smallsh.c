@@ -46,13 +46,17 @@ int main(int argc, char *argv[])
   prompt:;                                
     /* TODO: Manage background processes */
     int background_status = 0;
-    pid_t unwaited_pid = waitpid(0, &background_status, 0);
-
+    pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
+     
     if (unwaited_pid > 0) {
+      printf("Background process management loop");
       if (WIFEXITED(background_status)) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));  
       } else if (WIFSIGNALED(background_status)) {
-        fprintf(stderr, "Child process %jd done. Signal %d.\n", (intmax_t) unwaited_pid,  128 + WTERMSIG(background_status));
+        fprintf(stderr, "Child process %jd done. Signal %d.\n", (intmax_t) unwaited_pid, WTERMSIG(background_status));
+      } else if (WIFSTOPPED(background_status)) {
+        fprintf(stderr, "Child process %d stopped. Continuing.\n", unwaited_pid);
+        kill(0, SIGCONT);
       }
     };
     /* TODO: prompt */      // The prompt in smallsh assignment page.
@@ -143,7 +147,7 @@ int main(int argc, char *argv[])
     } else if (spawnPid == 0) {
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
-
+        printf("I am the child 0 = %jd\n",(intmax_t) spawnPid);
         // copy words to args array, unless it's "<", ">", or ">>"
         int args_index = 0; 
         for(int i = 0; i < nwords; ++i) {
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
     } else { // parent process
       if(bg_process) {
       background_pid = spawnPid; 
-      // waitpid(spawnPid, &child_status, WNOHANG);
+      waitpid(spawnPid, &child_status, WNOHANG);
       } else {
         waitpid(spawnPid, &child_status, 0);
         if (WIFSIGNALED(child_status)) {
