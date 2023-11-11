@@ -197,6 +197,12 @@ int main(int argc, char *argv[])
         if(bg_process) {
           background_pid = spawnPid; 
           waitpid(spawnPid, &child_status, WNOHANG);
+          if (WIFEXITED(child_status)) {
+            fprintf(stderr, "Child process %d done. Exit status %d.\n", background_pid, WEXITSTATUS(child_status));
+          }
+          if (WIFSIGNALED(child_status)) {
+            fprintf(stderr, "Child process %d done. Signaled %d.\n", background_pid, WTERMSIG(child_status));
+          }
         } else {
           waitpid(spawnPid, &child_status, 0);
           if (WIFSIGNALED(child_status) != 0) {
