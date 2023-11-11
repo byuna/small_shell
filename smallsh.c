@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
   for (;;) {
   // Can use goto to jump back to here.
     /* TODO: Manage background processes */
-    if (bg_process) {
+    if (background_pid > -1 && bg_process) {
       int background_status = 0;
-      pid_t unwaited_pid = waitpid(0, &background_status, WNOHANG);
-      if (WIFSIGNALED(background_status) != 0) {
-        fprintf(stderr, "Child Process %jd done. Exit status %d\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));
+      waitpid(background_pid, &background_status, WNOHANG);
+      if (WIFSIGNALED(background_status)) {
+        fprintf(stderr, "Child Process %jd done. Exit status %d\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
       } else {
-        fprintf(stderr, "Child process %jd done. Signal %d\n", (intmax_t) unwaited_pid, WTERMSIG(background_status));
+        fprintf(stderr, "Child process %jd done. Signal %d\n", (intmax_t) background_pid, WTERMSIG(background_status) + 128);
       }
       bg_process = false;
     }
