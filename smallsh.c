@@ -146,7 +146,6 @@ int main(int argc, char *argv[])
     } else if (spawnPid == 0) {
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
-        printf("I am the child 0 = %jd\n",(intmax_t) spawnPid);
         // copy words to args array, unless it's "<", ">", or ">>"
         int args_index = 0; 
         for(int i = 0; i < nwords; ++i) {
@@ -189,10 +188,10 @@ int main(int argc, char *argv[])
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
+        goto prompt;
     } else { // parent process
       if(bg_process) {
       background_pid = spawnPid; 
-      waitpid(spawnPid, &child_status, WNOHANG);
       } else {
         waitpid(spawnPid, &child_status, 0);
         if (WIFSIGNALED(child_status)) {
