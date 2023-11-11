@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
       }
         if (WIFSIGNALED(background_status)) {
-        fprintf(stderr, "Child process %jd done. Signaled %d.\n", (intmax_t) background_pid, WTERMSIG(background_status));
+        fprintf(stderr, "Child process %jd done. Signaled %d.\n", (intmax_t) background_pid, WSTOPSIG(background_status));
       }
      bg_process = false;
     }
