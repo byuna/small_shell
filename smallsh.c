@@ -157,19 +157,27 @@ int main(int argc, char *argv[])
             if (fd == -1) {
               perror("Invalid input file");
             }
-
             int result = dup2(fd, 0);
             if (result == -1) {
               perror("source dup2 failed");
             }
             // increment i to skip the redirection filename
             i++;
+          } else if (strcmp(words[i], ">") == 0) {
+            int fd = open(words[i + 1], O_CREAT | O_WRONLY | O_TRUNC, 0777);
+            if (fd == -1) {
+              perror("Output fd failed");
+            }
+            int result = dup2(fd, 1);
+            if (result == -1) {
+              perror("output dup2 failed");
+            }
+            i++;
           } else {
             args[args_index] = words[i];
             args_index++;
           }
         }
-
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
