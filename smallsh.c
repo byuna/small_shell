@@ -203,6 +203,7 @@ int main(int argc, char *argv[])
     } else { // parent process
       if(bg_process) {
       background_pid = spawnPid; 
+      waitpid(background_pid, &background_status, WNOHANG);
       } else {
         // waitpid(spawnPid, &child_status, WUNTRACED);
         foreground_pid = spawnPid;
