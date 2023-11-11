@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
-    if(background_pid > -1) {
+    if(background_pid > 0) {
       if (WIFEXITED(background_status)) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
       }
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     bg_process = false;
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
-      fprintf(stderr, getenv("PS1"));
+      fprintf(stderr,"%s", getenv("PS1"));
     }
    
     // clearing out word so it doesn't retain garbage values.
