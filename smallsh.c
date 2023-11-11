@@ -147,24 +147,30 @@ int main(int argc, char *argv[])
           words[nwords - 1] = 0;
         }
         // array of pointers to strings.
-        char **args[MAX_WORDS] = {0};
+        char *args[MAX_WORDS] = {0};
 
         // copy words to args array, unless it's "<", ">", or ">>"
         int args_index = 0; 
         for(int i = 0; i < nwords; ++i) {
           if (strcmp(words[i], "<") == 0) {
             int fd = open(words[i + 1], O_RDONLY);
-            dup2(fd, 0);
+            if (fd == -1) {
+              perror("Invalid input file");
+            }
+
+            int result = dup2(fd, 0);
+            if (result == -1) {
+              perror("source dup2 failed");
+            }
             // increment i to skip the redirection filename
             i++;
           } else {
-            args[args_index] = &words[i];
+            args[args_index] = words[i];
             args_index++;
           }
         }
 
-
-        execvp(*args[0], *args);
+        execvp(args[0], args);
         perror("execvp() error");
         exit(1);
         break;
