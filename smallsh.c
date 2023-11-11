@@ -9,7 +9,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <stdbool.h>
 #include <fcntl.h>
 
 #ifndef MAX_WORDS
@@ -22,9 +21,8 @@ char * expand(char const *word);
 char * strip_string(char const * word);
 
 int foreground_status = 0;    // $?
-int background_status = 0;
 pid_t background_pid = -4;    // $!
-bool bg_process;
+int bg_process;
 int signal_status;
 int exit_status;
 
@@ -47,12 +45,22 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
+    int background_status = 0;
+    pid_t unwaited_pid = waitpid(0, &background_status, 0);
+
+    if (unwaited_pid > 0) {
+      if (WIFEXITED(background_status)) {
+        fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));  
+      } else if (WIFSIGNALED(background_status)) {
+        fprintf(stderr, "Child process %jd done. Signal %d.\n", (intmax_t) unwaited_pid,  128 + WTERMSIG(background_status));
+      }
+    };
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
     }
    
-    bg_process = false;
+    bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
       words[i] = 0;
@@ -77,16 +85,18 @@ int main(int argc, char *argv[])
     
     // check to see if background process.
     if(nwords > 1 && (strcmp(words[nwords-1], "&")) == 0) {
-      bg_process = true;
+      bg_process = 1;
+      words[nwords-1] = 0;
+      nwords -= 1;
     }
 
     // Expand $$, $?, $! in words.
     for (size_t i = 0; i < nwords; ++i) {
-      //fprintf(stderr, "Word %zu: %s\n", i, words[i]);
+      // fprintf(stderr, "Word %zu: %s\n", i, words[i]);
       char *exp_word = expand(words[i]);
       free(words[i]);
       words[i] = exp_word;
-      //fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
+      // fprintf(stderr, "Expanded Word %zu: %s\n", i, words[i]);
     }
 
     // builtin command for exit.
@@ -127,16 +137,10 @@ int main(int argc, char *argv[])
     int child_status;
 
     spawnPid = fork();
-    switch(spawnPid) {
-      case -1:
+    if (spawnPid == -1) {
         perror("fork() failed\n");
         exit(1);
-        break;
-      case 0:   // Child fork()
-        // if there was a background process &, set it to NULL in words.
-        if (bg_process) {
-          words[nwords - 1] = 0;
-        }
+    } else if (spawnPid == 0) {
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
 
@@ -182,21 +186,18 @@ int main(int argc, char *argv[])
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
-        break;
-
-      default:  // Parent process. 
-        if(bg_process) {
-          background_pid = spawnPid; 
-         //  waitpid(spawnPid, &child_status, WNOHANG);
+    } else { // parent process
+      if(bg_process) {
+      background_pid = spawnPid; 
+      // waitpid(spawnPid, &child_status, WNOHANG);
+      } else {
+        waitpid(spawnPid, &child_status, 0);
+        if (WIFSIGNALED(child_status)) {
+          foreground_status = 128 + WTERMSIG(child_status);
         } else {
-          waitpid(spawnPid, &child_status, 0);
-          if (WIFSIGNALED(child_status) != 0) {
-            foreground_status = 128 + WTERMSIG(child_status);
-          } else {
-            foreground_status = WEXITSTATUS(child_status); 
-          }
+          foreground_status = WEXITSTATUS(child_status); 
         }
-        break;
+      }  
     }
   }
 }
