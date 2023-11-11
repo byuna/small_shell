@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #ifndef MAX_WORDS
 #define MAX_WORDS 512
@@ -157,13 +158,21 @@ int main(int argc, char *argv[])
             if (input == NULL) {
               perror("Invalid file for input");
             } else {
+              // file is being opened correctly.
+              // need to get file contents into the args array.
               continue;
             }
             i++;
           } else if (strcmp(words[i], ">") == 0) {
             // change output to file name and remove i and i + 1; skip to i + 2.
-            close(1);
-            freopen(words[i + 1], "w+", stdout);
+            int targetfd = open(words[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+            if (targetfd == -1) {
+              perror("open()");
+            }
+            int result = dup2(targetfd, 1);
+            if (result == -1) {
+              perror("dup2()");
+            }
             i++;
           } else if (strcmp(words[i], ">>") == 0) {
             i++;
