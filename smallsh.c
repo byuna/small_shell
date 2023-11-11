@@ -45,7 +45,9 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
+    /*
     if(background_pid > -1 && bg_process) {
+      printf("%d\n", background_status);
       if (WIFEXITED(background_status) != 0) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) background_pid, WEXITSTATUS(background_status));
       }
@@ -54,6 +56,8 @@ int main(int argc, char *argv[])
       }
      bg_process = false;
     }
+    */
+     bg_process = false;
 
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
@@ -194,13 +198,14 @@ int main(int argc, char *argv[])
       default:  // Parent process. 
         if(bg_process) {
           background_pid = spawnPid; 
-          waitpid(spawnPid, &background_status, WNOHANG);
+          waitpid(spawnPid, &child_status, WNOHANG);
+          background_status = child_status;
         } else {
-          waitpid(spawnPid, &background_status, 0);
-          if (WIFSIGNALED(background_status) != 0) {
-            foreground_status = 128 + WTERMSIG(background_status);
+          waitpid(spawnPid, &child_status, 0);
+          if (WIFSIGNALED(child_status) != 0) {
+            foreground_status = 128 + WTERMSIG(child_status);
           } else {
-            foreground_status = WEXITSTATUS(background_status); 
+            foreground_status = WEXITSTATUS(child_status); 
           }
         }
         break;
