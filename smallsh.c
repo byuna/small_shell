@@ -44,10 +44,19 @@ int main(int argc, char *argv[])
 
   for (;;) {
   // Can use goto to jump back to here.
-  prompt:;                                
     /* TODO: Manage background processes */
-
+    if (bg_process) {
+      int background_status = 0;
+      pid_t unwaited_pid = waitpid(0, &background_status, WNOHANG);
+      if (WIFSIGNALED(background_status) != 0) {
+        fprintf(stderr, "Child Process %jd done. Exit status %d\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));
+      } else {
+        fprintf(stderr, "Child process %jd done. Signal %d\n", (intmax_t) unwaited_pid, WTERMSIG(background_status));
+      }
+      bg_process = false;
+    }
     /* TODO: prompt */      // The prompt in smallsh assignment page.
+  prompt:;
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
     }
@@ -187,7 +196,7 @@ int main(int argc, char *argv[])
       default:  // Parent process. 
         if(bg_process) {
           background_pid = spawnPid; 
-          waitpid(spawnPid, &child_status, WNOHANG);
+         //  waitpid(spawnPid, &child_status, WNOHANG);
         } else {
           waitpid(spawnPid, &child_status, 0);
           if (WIFSIGNALED(child_status) != 0) {
@@ -234,7 +243,6 @@ size_t wordsplit(char const *line) {
   }
   return wind;
 }
-
 
 /* Find next instance of a parameter within a word. Sets
  * start and end pointers to the start and end of the parameter
