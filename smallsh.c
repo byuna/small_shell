@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
       fprintf(stderr, "$");
     }
    
-  redirection_input:;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
       words[i] = 0;
@@ -137,54 +136,39 @@ int main(int argc, char *argv[])
     int child_status;
 
     spawnPid = fork();
-    
     switch(spawnPid) {
       case -1:
-        perror("fork() failed");
+        perror("fork() failed\n");
         exit(1);
         break;
       case 0:   // Child fork()
+        // if there was a background process &, set it to NULL in words.
         if (bg_process) {
           words[nwords - 1] = 0;
         }
         // array of pointers to strings.
         char **args[MAX_WORDS] = {0};
+
         // copy words to args array, unless it's "<", ">", or ">>"
+        int args_index = 0; 
         for(int i = 0; i < nwords; ++i) {
           if (strcmp(words[i], "<") == 0) {
-             // change input to filename i + 1; skip to i + 2;
-            fclose(input);
-            input = fopen(words[i + 1], "r");
-            if (input == NULL) {
-              perror("Invalid file for input");
-            } else {
-              // file is being opened correctly.
-              // need to get file contents into the args array.
-              continue;
-            }
-            i++;
-          } else if (strcmp(words[i], ">") == 0) {
-            // change output to file name and remove i and i + 1; skip to i + 2.
-            int targetfd = open(words[i + 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-            if (targetfd == -1) {
-              perror("open()");
-            }
-            int result = dup2(targetfd, 1);
-            if (result == -1) {
-              perror("dup2()");
-            }
-            i++;
-          } else if (strcmp(words[i], ">>") == 0) {
+            int fd = open(words[i + 1], O_RDONLY);
+            dup2(fd, 0);
+            // increment i to skip the redirection filename
             i++;
           } else {
-            args[i] = &words[i];
+            args[args_index] = &words[i];
+            args_index++;
           }
         }
+
 
         execvp(*args[0], *args);
         perror("execvp() error");
         exit(1);
         break;
+
       default:  // Parent process. 
         if(bg_process) {
           background_pid = spawnPid; 
