@@ -9,7 +9,6 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <stdbool.h>
-#include <fcntl.h>
 
 #ifndef MAX_WORDS
 #define MAX_WORDS 512
@@ -158,8 +157,7 @@ int main(int argc, char *argv[])
             if (input == NULL) {
               perror("Invalid file for input");
             } else {
-              fclose(input);
-              input = fopen(words[i + 1], "w+");
+              continue;
             }
             i++;
           } else if (strcmp(words[i], ">") == 0) {
