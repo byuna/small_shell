@@ -173,6 +173,16 @@ int main(int argc, char *argv[])
               perror("output dup2 failed");
             }
             i++;
+          } else if (strcmp(words[i], ">>") == 0) {
+            int fd = open(words[i + 1], O_CREAT | O_WRONLY | O_APPEND, 0777);
+            if (fd == -1) {
+              perror("Appending fd failed");
+            }
+            int result = dup2(fd, 1);
+            if (result == -1) {
+              perror("appending dup2 failed");
+            }
+            i++;
           } else {
             args[args_index] = words[i];
             args_index++;
