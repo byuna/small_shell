@@ -20,7 +20,6 @@ size_t wordsplit(char const *line);
 char * expand(char const *word);
 char * strip_string(char const * word);
 
-pid_t foreground_pid = -4;
 int foreground_status = 0;    // $?
 pid_t background_pid = -4;    // $!
 int bg_process;
@@ -45,20 +44,10 @@ int main(int argc, char *argv[])
   for (;;) {
   // Can use goto to jump back to here.
   prompt:;                                
-    /* Foreground STOPPED process management */
-    foreground_pid = waitpid(foreground_pid, &foreground_status, 0);
-     if (WIFSIGNALED(foreground_status)) {
-       foreground_status = 128 + WTERMSIG(foreground_status);
-     } else if (WEXITED) {
-       foreground_status = WEXITSTATUS(foreground_status); 
-     } else if (WIFSTOPPED(foreground_status)) {
-       fprintf(stderr, "Child foreground process %jd stopped. Continuing.\n", (intmax_t) foreground_pid);
-       kill(foreground_pid, SIGCONT);
-     } 
     /* TODO: Manage background processes */
     int background_status = 0;
     pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
- 
+     
     if (unwaited_pid > 0) {
       if (WIFEXITED(background_status)) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));  
@@ -204,15 +193,12 @@ int main(int argc, char *argv[])
       if(bg_process) {
       background_pid = spawnPid; 
       } else {
-        foreground_pid = spawnPid;
-        /*
-        waitpid(spawnPid, &child_status, WUNTRACED);
+        waitpid(spawnPid, &child_status, 0);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
         } else {
           foreground_status = WEXITSTATUS(child_status); 
         }
-        */
       }  
     }
   }
