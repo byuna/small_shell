@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
           }
         }
         // reset signal for child.
-        if (input == stdin) {
+        if (input != stdin) {
           signal(SIGTSTP, SIG_DFL);
           signal(SIGINT, SIG_DFL);
         }
