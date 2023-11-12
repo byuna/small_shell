@@ -28,6 +28,7 @@ int signal_status;
 
 int main(int argc, char *argv[])
 {
+  signal(SIGTSTP, SIG_IGN);
   FILE *input = stdin;
   char *input_fn = "(stdin)";             // fn means file name.
   if (argc == 2) {
@@ -45,8 +46,6 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
-    // foreground_pid = waitpid(foreground_pid, &signal_status, WUNTRACED | WNOHANG);
-    // printf("Foreground_pid is: %jdi, with signal status: %d",(intmax_t) foreground_pid, signal_status);
     int background_status = 0;
     pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
      
@@ -63,7 +62,13 @@ int main(int argc, char *argv[])
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
-    }    
+      // always ignore SIGTSP no matter what.
+      signal(SIGTSTP, SIG_IGN);
+      // only ignore SIGINT in interactive mode.
+      signal(SIGINT, SIG_IGN);
+    } else {
+      signal(SIGINT, SIG_DFL);
+    }
 
     bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
@@ -187,6 +192,8 @@ int main(int argc, char *argv[])
             args_index++;
           }
         }
+        signal(SIGTSTP,SIG_DFL);
+        signal(SIGINT, SIG_DFL);
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
