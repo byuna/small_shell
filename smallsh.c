@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
         background_pid = spawnPid; 
         waitpid(spawnPid, &child_status, WNOHANG);
       } else {
-        foreground_pid = spawnPid;
+        background_pid = spawnPid;
         waitpid(spawnPid, &child_status, WUNTRACED);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
           foreground_status = WEXITSTATUS(child_status);
         } else if (WIFSTOPPED(child_status)) {
           kill(spawnPid, SIGCONT);
-          fprintf(stderr, "Child process %jd stopped. Continuing\n", (intmax_t) spawnPid);
+          fprintf(stderr, "Child process %jd stopped. Continuing.\n", (intmax_t) spawnPid);
         }
       }
     }  
