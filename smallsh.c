@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
         perror("fork() failed\n");
         exit(1);
     } else if (spawnPid == 0) {
+        signal(SIGINT, SIG_DFL);
+        signal(SIGTSTP, SIG_DFL);
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
         // copy words to args array, unless it's "<", ">", or ">>"
@@ -191,11 +193,6 @@ int main(int argc, char *argv[])
             args[args_index] = words[i];
             args_index++;
           }
-        }
-        // reset signal for child.
-        if (input != stdin) {
-          signal(SIGTSTP, SIG_DFL);
-          signal(SIGINT, SIG_DFL);
         }
         execvp(args[0], args);
         perror("execvp() error");
