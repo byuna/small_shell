@@ -193,8 +193,10 @@ int main(int argc, char *argv[])
           }
         }
         // reset signal for child.
-        signal(SIGTSTP,SIG_DFL);
-        signal(SIGINT, SIG_DFL);
+        if (input == stdin) {
+          signal(SIGTSTP, SIG_DFL);
+          signal(SIGINT, SIG_DFL);
+        }
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
