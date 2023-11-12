@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #ifndef MAX_WORDS
 #define MAX_WORDS 512
@@ -19,12 +20,12 @@ char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
 char * strip_string(char const * word);
+void sigint_handler(int sig){};
 
 pid_t foreground_pid = -4;
 int foreground_status = 0;    // $?
 pid_t background_pid = -4;    // $!
 int bg_process;
-int signal_status;
 
 int main(int argc, char *argv[])
 {
@@ -42,6 +43,13 @@ int main(int argc, char *argv[])
   char *line = NULL;
   size_t n = 0;
 
+  // always ignotr SIGTSTP;Ustruct sigaction 
+  struct sigaction ign_sig_act = {0}; 
+  ign_sig_act.sa_handler = SIG_IGN;
+  struct sigaction getline_sig_act = {0};
+  getline_sig_act.sa_handler = sigint_handler;
+  struct sigaction default_sig_act = {0};
+  default_sig_act.sa_handler = SIG_DFL;
   for (;;) {
   // Can use goto to jump back to here.
   prompt:;                                
@@ -62,10 +70,10 @@ int main(int argc, char *argv[])
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
-      // always ignore SIGTSP no matter what.
-      signal(SIGTSTP, SIG_IGN);
+      sigaction(SIGTSTP, &ign_sig_act, &default_sig_act);
+      sigaction(SIGINT, &ign_sig_act, &default_sig_act);
+      
       // only ignore SIGINT in interactive mode.
-      signal(SIGINT, SIG_IGN);
     } 
 
     bg_process = 0;
@@ -149,6 +157,7 @@ int main(int argc, char *argv[])
         perror("fork() failed\n");
         exit(1);
     } else if (spawnPid == 0) {
+
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
         // copy words to args array, unless it's "<", ">", or ">>"
@@ -363,5 +372,5 @@ expand(char const *word)
   }
   return build_str(start, NULL);
 }
-
 // work cited: https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
+
