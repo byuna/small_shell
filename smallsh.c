@@ -148,7 +148,6 @@ int main(int argc, char *argv[])
     } else if (spawnPid == 0) {
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
-        printf("I am the child 0 = %jd\n",(intmax_t) spawnPid);
         // copy words to args array, unless it's "<", ">", or ">>"
         int args_index = 0; 
         for(int i = 0; i < nwords; ++i) {
@@ -203,7 +202,7 @@ int main(int argc, char *argv[])
         } else if (WIFEXITED(child_status)) {
           foreground_status = WEXITSTATUS(child_status);
         } else if (WIFSTOPPED(child_status)) {
-          fprintf(stderr, "Child process %jd stopped. Continuing", (intmax_t) spawnPid);
+          fprintf(stderr, "Child process %jd stopped. Continuing\n", (intmax_t) spawnPid);
           kill(spawnPid, SIGCONT);
         }
       }
