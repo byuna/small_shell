@@ -66,9 +66,7 @@ int main(int argc, char *argv[])
       signal(SIGTSTP, SIG_IGN);
       // only ignore SIGINT in interactive mode.
       signal(SIGINT, SIG_IGN);
-    } else {
-      signal(SIGINT, SIG_DFL);
-    }
+    } 
 
     bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
@@ -192,7 +190,6 @@ int main(int argc, char *argv[])
             args_index++;
           }
         }
-        signal(SIGINT, SIG_DFL);
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
