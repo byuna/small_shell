@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
             args_index++;
           }
         }
+        // reset signal for child.
         signal(SIGTSTP,SIG_DFL);
         signal(SIGINT, SIG_DFL);
         execvp(args[0], args);
