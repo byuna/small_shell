@@ -24,6 +24,7 @@ pid_t foreground_pid = -4;
 int foreground_status = 0;    // $?
 pid_t background_pid = -4;    // $!
 int bg_process;
+int signal_status;
 
 int main(int argc, char *argv[])
 {
@@ -44,18 +45,12 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
-    foreground_pid = waitpid(foreground_pid, &foreground_status, WUNTRACED);
-    if (foreground_pid > 0) {
-      if (WIFSIGNALED(foreground_status) > 0) {
-          foreground_status = 128 + WTERMSIG(foreground_status);
-        } else if (WIFEXITED(foreground_status)) {
-          foreground_status = WEXITSTATUS(foreground_status); 
-        } else if (WIFSTOPPED(foreground_status)) {
-          fprintf(stderr, "Child process %jd stopped. Continuing.\n", (intmax_t) foreground_pid);
-          kill(foreground_pid, SIGCONT);
-        }
-    }
+    foreground_pid = waitpid(foreground_pid, &signal_status, WUNTRACED);
 
+    if(WIFSTOPPED(foreground_status)) {
+      fprintf(stderr, "Child process %jd stopped. Continuing.\n", (intmax_t) foreground_pid);
+      kill(foreground_pid, SIGCONT);
+    }
     int background_status = 0;
     pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
      
@@ -148,7 +143,7 @@ int main(int argc, char *argv[])
     }
 
     pid_t spawnPid = -5;
-    // int child_status;
+    int child_status;
 
     spawnPid = fork();
     if (spawnPid == -1) {
@@ -203,19 +198,15 @@ int main(int argc, char *argv[])
     } else { // parent process
       if(bg_process) {
       background_pid = spawnPid; 
-      waitpid(background_pid, &background_status, WNOHANG);
       } else {
-        // waitpid(spawnPid, &child_status, WUNTRACED);
+        waitpid(spawnPid, &child_status, WUNTRACED);
         foreground_pid = spawnPid;
-
-        /*
         printf("foreground_pid %jd\n", (intmax_t) foreground_pid);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
         } else {
           foreground_status = WEXITSTATUS(child_status); 
         }
-        */
       }  
     }
   }
