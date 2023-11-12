@@ -20,11 +20,11 @@ size_t wordsplit(char const *line);
 char * expand(char const *word);
 char * strip_string(char const * word);
 
+pid_t foreground_pid = -4;
 int foreground_status = 0;    // $?
 pid_t background_pid = -4;    // $!
 int bg_process;
 int signal_status;
-int exit_status;
 
 int main(int argc, char *argv[])
 {
@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
   // Can use goto to jump back to here.
   prompt:;                                
     /* TODO: Manage background processes */
+    foreground_pid = waitpid(foreground_pid, &signal_status, WUNTRACED | WNOHANG);
+    //printf("Foreground_pid is: %jdi, with signal status: %d",(intmax_t) foreground_pid, signal_status);
     int background_status = 0;
     pid_t unwaited_pid = waitpid(0, &background_status, WUNTRACED | WNOHANG);
      
@@ -191,10 +193,15 @@ int main(int argc, char *argv[])
         exit(1);
     } else { // parent process
       if(bg_process) {
-      background_pid = spawnPid; 
-      waitpid(spawnPid, &child_status, WNOHANG);
+        background_pid = waitpid(spawnPid, &child_status, WNOHANG);
+        if (background_pid == -1) {
+          perror("background_pid error");
+        }
       } else {
-        waitpid(spawnPid, &child_status, 0);
+        foreground_pid = waitpid(spawnPid, &child_status, 0);
+        if (foreground_pid == -1) {
+          perror("foreground_pid error");
+        }
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
         } else {
