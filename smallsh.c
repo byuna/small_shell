@@ -63,10 +63,8 @@ int main(int argc, char *argv[])
     /* TODO: prompt */      // The prompt in smallsh assignment page.
     if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
       fprintf(stderr,"%s", getenv("PS1"));
-    } else {
-      signal(SIGINT, SIG_IGN);
-    }
-   
+    }    
+
     bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
