@@ -201,7 +201,6 @@ int main(int argc, char *argv[])
       } else {
         waitpid(spawnPid, &child_status, WUNTRACED);
         foreground_pid = spawnPid;
-        printf("foreground_pid %jd\n", (intmax_t) foreground_pid);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
         } else {
