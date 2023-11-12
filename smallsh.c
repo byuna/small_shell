@@ -192,6 +192,7 @@ int main(int argc, char *argv[])
             args_index++;
           }
         }
+        signal(SIGINT, SIG_DFL);
         execvp(args[0], args);
         perror("execvp() error");
         exit(1);
