@@ -202,6 +202,8 @@ int main(int argc, char *argv[])
           foreground_status = 128 + WTERMSIG(child_status);
         } else if (WIFEXITED(child_status)) {
           foreground_status = WEXITSTATUS(child_status);
+        } else if (WIFSTOPPED(child_status)) {
+          continue;
         }
       }
     }  
