@@ -151,8 +151,6 @@ int main(int argc, char *argv[])
         perror("fork() failed\n");
         exit(1);
     } else if (spawnPid == 0) {
-        signal(SIGINT, SIG_DFL);
-        signal(SIGTSTP, SIG_DFL);
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
         // copy words to args array, unless it's "<", ">", or ">>"
