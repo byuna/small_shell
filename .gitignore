@@ -3,3 +3,8 @@ test
 _echo
 _exit
 _signal
+_echo.c
+_exit.c
+hello
+pointertest.c
+testfile

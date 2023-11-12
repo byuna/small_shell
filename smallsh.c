@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
   getline_sig_act.sa_handler = sigint_handler;
   struct sigaction default_sig_act = {0};
   default_sig_act.sa_handler = SIG_DFL;
+  default_sig_act.sa_flags = SA_RESETHAND;
 
   for (;;) {
   // Can use goto to jump back to here.
@@ -165,6 +166,9 @@ int main(int argc, char *argv[])
         perror("fork() failed\n");
         exit(1);
     } else if (spawnPid == 0) {
+        // Reset signals to default states in child.
+        sigaction(SIGINT, &default_sig_act, 0);
+        sigaction(SIGTSTP, &default_sig_act, 0);
 
         // array of pointers to strings.
         char *args[MAX_WORDS] = {0};
