@@ -203,7 +203,8 @@ int main(int argc, char *argv[])
         } else if (WIFEXITED(child_status)) {
           foreground_status = WEXITSTATUS(child_status);
         } else if (WIFSTOPPED(child_status)) {
-          continue;
+          fprintf(stderr, "Child process %jd stopped. Continuing", (intmax_t) spawnPid);
+          kill(spawnPid, SIGCONT);
         }
       }
     }  
