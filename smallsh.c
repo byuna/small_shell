@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
       fprintf(stderr,"%s", getenv("PS1"));
     } else {
       signal(SIGINT, SIG_IGN);
+    }
    
     bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
@@ -194,17 +195,18 @@ int main(int argc, char *argv[])
         exit(1);
     } else { // parent process
       if(bg_process) {
-      background_pid = spawnPid; 
-      waitpid(spawnPid, &child_status, WNOHANG);
+        background_pid = spawnPid; 
+        waitpid(spawnPid, &child_status, WNOHANG);
       } else {
         foreground_pid = spawnPid;
-        waitpid(spawnPid, &child_status, 0);
+        waitpid(spawnPid, &child_status, WUNTRACED);
         if (WIFSIGNALED(child_status)) {
           foreground_status = 128 + WTERMSIG(child_status);
-        } else {
-          foreground_status = WEXITSTATUS(child_status); 
+        } else if (WIFEXITED(child_status)) {
+          foreground_status = WEXITSTATUS(child_status);
         }
-      }  
+      }
+    }  
     }
   }
 }
