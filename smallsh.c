@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
   getline_sig_act.sa_handler = sigint_handler;
   struct sigaction default_sig_act = {0};
   default_sig_act.sa_handler = SIG_DFL;
+
   for (;;) {
   // Can use goto to jump back to here.
   prompt:;                                
@@ -84,8 +85,15 @@ int main(int argc, char *argv[])
     // reset errors and clear errno.
     clearerr(input);
     errno = 0;
-
+    
+    sigaction(SIGINT, &getline_sig_act,0);
     ssize_t line_len = getline(&line, &n, input);
+    if (errno ==  EINTR) {
+      fprintf(stderr, "\n");
+      goto  prompt;
+    }
+    sigaction(SIGINT, &ign_sig_act, 0);
+
     // get line will return -1 for EOF and for errors, so we check for EOF to exit before it errors out.
     if (feof(input) != 0) {
       exit(0);
