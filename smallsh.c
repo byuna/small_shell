@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
       if (WIFEXITED(background_status)) {
         fprintf(stderr, "Child process %jd done. Exit status %d.\n", (intmax_t) unwaited_pid, WEXITSTATUS(background_status));  
       } else if (WIFSIGNALED(background_status)) {
-        fprintf(stderr, "Child process %jd done. Signal %d.\n", (intmax_t) unwaited_pid, WTERMSIG(background_status));
+        fprintf(stderr, "Child process %jd done. Signaled %d.\n", (intmax_t) unwaited_pid, WTERMSIG(background_status));
       } else if (WIFSTOPPED(background_status)) {
         fprintf(stderr, "Child process %d stopped. Continuing.\n", unwaited_pid);
         kill(0, SIGCONT);
