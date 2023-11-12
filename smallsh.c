@@ -1,3 +1,8 @@
+// Works Cited
+// Source: https://stackoverflow.com/questions/53230154/converting-pid-t-to-string
+// Usage: Within expand() function to be able to convert the pid_t pids into a string
+//        in order to pass into build_str().
+
 #define _POSIX_C_SOURCE 200809L
 #define _GNU_SOURCE
 #include <stdlib.h>
@@ -19,7 +24,6 @@
 char *words[MAX_WORDS];
 size_t wordsplit(char const *line);
 char * expand(char const *word);
-char * strip_string(char const * word);
 void sigint_handler(int sig){};
 
 pid_t foreground_pid = -4;
@@ -43,12 +47,12 @@ int main(int argc, char *argv[])
   char *line = NULL;
   size_t n = 0;
 
-  // always ignotr SIGTSTP;Ustruct sigaction 
-  struct sigaction ign_sig_act = {0}; 
+  // Signal structures to be passed to sigaction().
+  struct sigaction ign_sig_act = {0};             // Ignore signal.
   ign_sig_act.sa_handler = SIG_IGN;
-  struct sigaction getline_sig_act = {0};
+  struct sigaction getline_sig_act = {0};         // Used before getline to escape SIGINT.
   getline_sig_act.sa_handler = sigint_handler;
-  struct sigaction default_sig_act = {0};
+  struct sigaction default_sig_act = {0};         // Used in a child process to reset a signal to it's default action.
   default_sig_act.sa_handler = SIG_DFL;
   default_sig_act.sa_flags = SA_RESETHAND;
 
@@ -69,15 +73,16 @@ int main(int argc, char *argv[])
         kill(0, SIGCONT);
       }
     };
-    /* TODO: prompt */      // The prompt in smallsh assignment page.
-    if (input == stdin) {   // if input == stdin, we're in interactive mode. otherwise it's a file.
+    /* TODO: prompt */
+    if (input == stdin) {
+      // Fetch whatever PS1 is set to to prompt the user to enter commands in terminal.
       fprintf(stderr,"%s", getenv("PS1"));
+      // Ignore SIGINT and SIGTSTP, noninteractive mode signal handling not required.
       sigaction(SIGTSTP, &ign_sig_act, &default_sig_act);
       sigaction(SIGINT, &ign_sig_act, &default_sig_act);
-      
-      // only ignore SIGINT in interactive mode.
     } 
 
+    // Maintenance, resetting background process indicator, arrays, and error status.
     bg_process = 0;
     // clearing out word so it doesn't retain garbage values.
     for (int i = 0; i < MAX_WORDS; i++) {
@@ -87,12 +92,14 @@ int main(int argc, char *argv[])
     clearerr(input);
     errno = 0;
     
+    // Changing actions for SIGINT to call the do-nothing signal handler so we can escape.
     sigaction(SIGINT, &getline_sig_act,0);
     ssize_t line_len = getline(&line, &n, input);
     if (errno ==  EINTR) {
       fprintf(stderr, "\n");
       goto  prompt;
     }
+    // Restoring SIGINT to be ignored.
     sigaction(SIGINT, &ign_sig_act, 0);
 
     // get line will return -1 for EOF and for errors, so we check for EOF to exit before it errors out.
@@ -101,6 +108,7 @@ int main(int argc, char *argv[])
     } else if (line_len < 0) {
       err(1, "%s", input_fn);
     }
+
     // number of words. wordsplit puts line into individual words into words array.
     size_t nwords = wordsplit(line);
     
@@ -389,5 +397,3 @@ expand(char const *word)
   }
   return build_str(start, NULL);
 }
-// work cited: https://stackoverflow.com/questions/53230155/converting-pid-t-to-string
-
